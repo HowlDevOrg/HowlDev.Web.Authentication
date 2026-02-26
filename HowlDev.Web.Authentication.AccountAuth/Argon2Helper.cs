@@ -18,10 +18,8 @@ internal static class Argon2Helper {
     /// Generates a new random salt and includes it in the return string. 
     /// </summary>
     public static string HashPassword(string password) {
-        // 1️⃣ generate random salt
         byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
 
-        // 2️⃣ configure Argon2id (the recommended variant)
         var argon2 = new Argon2id(System.Text.Encoding.UTF8.GetBytes(password)) {
             Salt = salt,
             DegreeOfParallelism = Parallelism,
@@ -29,10 +27,8 @@ internal static class Argon2Helper {
             MemorySize = MemoryKB   // expressed in KiB
         };
 
-        // 3️⃣ compute the hash (async API is recommended)
         byte[] hash = argon2.GetBytes(HashSize);
 
-        // 4️⃣ encode everything into one string for storage
         //    Format: $argon2id$v=19$m=131072,t=2,p=4$<base64(salt)>$<base64(hash)>
         string encoded = string.Concat(
             "$argon2id$",
