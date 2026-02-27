@@ -16,7 +16,21 @@ namespace HowlDev.Web.Authentication.Middleware;
 /// it will remove that key. If it's under but over the re-auth time (also assuming config), it will 
 /// reset the expiration date. Then it will let the response pass. 
 /// </summary>
-public class IdentityMiddleware(RequestDelegate next, IAuthMiddlewareService service, IDMiddlewareConfig config, ILogger<IdentityMiddleware> logger) {
+public partial class IdentityMiddleware {
+    private readonly RequestDelegate next;
+    private readonly IAuthMiddlewareService service;
+    private readonly IDMiddlewareConfig config;
+    private readonly ILogger<IdentityMiddleware> logger;
+
+    /// <summary/>
+    public IdentityMiddleware(RequestDelegate _next, IAuthMiddlewareService _service, IDMiddlewareConfig _config, ILogger<IdentityMiddleware> _logger)
+    {
+        next = _next;
+        service = _service;
+        config = _config;
+        logger = _logger;
+    }
+    
     /// <summary/>
     public async Task InvokeAsync(HttpContext context) {
         logger.LogTrace("Entered middleware method.");
@@ -48,6 +62,7 @@ public class IdentityMiddleware(RequestDelegate next, IAuthMiddlewareService ser
                 } else {
                     await context.Response.WriteAsync($"Unauthorized: Missing header(s).\nRequires an \"{config.HeaderAccount}\" and \"{config.HeaderKey}\" header.");
                 }
+
                 logger.LogInformation("Two required headers were not found.");
                 return;
             }
@@ -62,7 +77,7 @@ public class IdentityMiddleware(RequestDelegate next, IAuthMiddlewareService ser
             } catch {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Account does not exist.");
-                logger.LogInformation("Account information could not be found. Searched for account: {account}", account);
+                LogAccountName(account);
                 return;
             }
 
@@ -70,12 +85,12 @@ public class IdentityMiddleware(RequestDelegate next, IAuthMiddlewareService ser
             DateTime? output;
             try {
                 output = await service.GetValidatedOnForKeyAsync(account, key);
-                logger.LogTrace("Found a date value ({datetime})", output);
+                LogDateResult(output);
             } catch {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("API key does not exist.");
                 AuthMetrics.UnknownApiKeys.Add(1);
-                logger.LogInformation("Could not find API key ({key}) in the table.", key);
+                LogUnknownKey(key);
                 return;
             }
 
@@ -88,7 +103,7 @@ public class IdentityMiddleware(RequestDelegate next, IAuthMiddlewareService ser
 
             TimeSpan? timeBetween = DateTime.Now.ToUniversalTime() - output;
             if (timeBetween < config.ExpirationDate) {
-                logger.LogTrace("Found date was not past the calculated expiration date. There is still ({timespan}) time left.", timeBetween);
+                LogTimeRemaining(timeBetween);
                 if (config.ReValidationDate is not null &&
                     timeBetween > config.ReValidationDate) {
                     await service.ReValidateAsync(account, key);
@@ -106,6 +121,19 @@ public class IdentityMiddleware(RequestDelegate next, IAuthMiddlewareService ser
                 AuthMetrics.ExpiredKeys.Add(1);
             }
         }
+
         logger.LogTrace("Exiting middleware method.");
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Account information could not be found. Searched for account: {account}")]
+    private partial void LogAccountName(string account);
+
+    [LoggerMessage(Level = LogLevel.Trace, Message = "Found a date value ({output})")]
+    private partial void LogDateResult(DateTime? output);
+
+    [LoggerMessage(Level = LogLevel.Trace, Message = "Found date was not past the calculated expiration date. There is still ({timespan}) time left.")]
+    private partial void LogTimeRemaining(TimeSpan? timespan);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Could not find API key ({key}) in the table.")]
+    private partial void LogUnknownKey(string key);
 }

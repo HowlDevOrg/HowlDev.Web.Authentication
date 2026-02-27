@@ -93,6 +93,12 @@ For items in long-term storage:
 
 ## Changelog
 
+1.2.0 & 3.0.2 (2/26/25)
+
+- Version bump, adding to my new organization on GitHub. 
+- Updated formatting. 
+  - Middleware now has slightly more optimal logging statements if logging is disabled. 
+
 1.1.0 (12/26/25)
 
 - Middleware configuration now enables Regex paths for more general endpoints (such as ones with arbitrary IDs)

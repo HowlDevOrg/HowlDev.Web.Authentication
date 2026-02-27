@@ -40,9 +40,11 @@ public class AccountInfo {
         if (!context.Request.Headers.TryGetValue("Account-Auth-Account", out var accountName)) {
             throw new Exception("Do not use without IdentityMiddleware; wrong path (missing account)");
         }
+
         if (!context.Request.Headers.TryGetValue("Account-Auth-ApiKey", out var apiKey)) {
             throw new Exception("Do not use without IdentityMiddleware; wrong path (missing API key)");
         }
+
         Guid guid = (Guid)context.Items["Guid"]!;
         int role = (int)context.Items["Role"]!;
 

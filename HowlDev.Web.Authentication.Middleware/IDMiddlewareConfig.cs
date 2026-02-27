@@ -24,31 +24,31 @@ public class IDMiddlewareConfig {
     /// path. For example, in some projects, all API calls start with <c>/api</c>, so adding 
     /// that will only check paths that start with <c>/api</c>. 
     /// </summary>
-    public string? Whitelist { get; set; } = null;
+    public string? Whitelist { get; set; }
 
     /// <summary>
     /// Set to the timespan that API keys are valid for. <c>Null</c> enables no time validation. 
     /// </summary>
-    public TimeSpan? ExpirationDate { get; set; } = null;
+    public TimeSpan? ExpirationDate { get; set; }
 
     /// <summary>
     /// If set to <c>null</c>, does nothing. Otherwise, set it to a timespan so if their key is still 
     /// valid, reset the expiration date for their API key. 
     /// </summary>
-    public TimeSpan? ReValidationDate { get; set; } = null;
+    public TimeSpan? ReValidationDate { get; set; }
 
     /// <summary>
     /// Enables all levels of Traces, Debug, Information, and Error 
     /// in the IdentityMiddleware. Set different logging levels in appsettings.json.
     /// </summary>
-    public bool EnableLogging { get; set; } = false;
+    public bool EnableLogging { get; set; }
 
     /// <summary>
     /// Removes detailed error messages with invalid headers. As you shouldn't broadcast 
     /// what headers are needed to bypass an authentication middleware, this should be disabled 
     /// in production (and after you get your frontend API calls set up). 
     /// </summary>
-    public bool DisableHeaderInfo { get; set; } = false;
+    public bool DisableHeaderInfo { get; set; }
 
     /// <summary>
     /// Specify the header name for the account name which the middleware checks for valid account names. <br/>
