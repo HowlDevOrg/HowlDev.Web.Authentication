@@ -1,7 +1,7 @@
 @AA = http://localhost:5133
-@Username = Cody
+@Username = Cody2
 @Password = password
-@Key = _u2M8mWHn6IXPryEXHDp
+@Key = jScbw!u4LF0ljPzoixF4
 
 ###
 GET {{AA}}/health
@@ -12,7 +12,7 @@ GET {{AA}}/user/exact?account=Cody
 Account-Auth-Account: {{Username}}
 Account-Auth-ApiKey: {{Key}}
 ###
-POST {{AA}}/user?accountName=Cody
+POST {{AA}}/user?accountName=Admin
 ###
 POST {{AA}}/user/signin
 Content-Type: application/json
@@ -23,6 +23,10 @@ Content-Type: application/json
 }
 ###
 GET {{AA}}/user/valid
+Account-Auth-Account: {{Username}}
+Account-Auth-ApiKey: {{Key}}
+###
+GET {{AA}}/user/exists?user=cody
 Account-Auth-Account: {{Username}}
 Account-Auth-ApiKey: {{Key}}
 ###
@@ -60,6 +64,10 @@ Content-Type: application/json
 }
 ### Enables role change
 PATCH {{AA}}/user/role?newRole=5
+Account-Auth-Account: {{Username}}
+Account-Auth-ApiKey: {{Key}}
+### Enables username change
+PATCH {{AA}}/user/newname?guid=97e19267-0745-413e-be95-dacad076bfaa&newUser=Admin
 Account-Auth-Account: {{Username}}
 Account-Auth-ApiKey: {{Key}}
 ###

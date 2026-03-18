@@ -56,8 +56,14 @@ app.MapPatch("/user/role", async (AuthService service, AccountInfo info, int new
     await service.UpdateRoleAsync(info.AccountName, newRole);
     return Results.Ok();
 });
+app.MapPatch("/user/newname", async (AuthService service, Guid guid, string newUser) => {
+    Console.WriteLine(guid + ", " + newUser);
+    await service.UpdateAccountNameAsync(guid, newUser);
+    return Results.Ok();
+});
 
 app.MapGet("/user/valid", () => Results.Ok());
+app.MapGet("/user/exists", (AuthService svc, string user) => svc.AccountExistsAsync(user));
 app.MapGet("/user/guid", (AccountInfo info) => info.Guid);
 app.MapGet("/user/role", (AccountInfo info) => info.Role);
 

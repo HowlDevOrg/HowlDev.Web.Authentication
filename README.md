@@ -93,6 +93,12 @@ For items in long-term storage:
 
 ## Changelog
 
+3.1.0 (3/17/26)
+
+- Added two new methods to the AuthService: 
+  - AccountNameExistsAsync, which returns a bool as to if an account name exists. They swallow errors, so it can be a helpful check (at the expense of calling the DB again). This has overloads for strings (accountName) and GUID values.
+  - UpdateAccountNameAsync, allowing a GUID and new string to be assigned to that account. Because of how it works, it requires a signout (at least, my testing required it), so it by default signs you out completely, makes the update, then clears the cache of old values (if they exist). 
+
 1.2.0 & 3.0.2 (2/26/25)
 
 - Version bump, adding to my new organization on GitHub. 

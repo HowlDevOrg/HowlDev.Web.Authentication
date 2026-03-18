@@ -43,6 +43,14 @@ public interface IAuthService : IAuthMiddlewareService {
     Task UpdateRoleAsync(string accountName, int newRole);
 
     /// <summary>
+    /// Updates the user's name tied to the GUID. Removes all current keys through a global sign out
+    /// and clears the lookup dictionary of the prior account name. <br/>
+    /// Throws an ArgumentException if the new name is already in use.
+    /// </summary>
+    /// <exception cref="ArgumentException" />
+    Task UpdateAccountNameAsync(Guid account, string newName);
+
+    /// <summary>
     /// Deletes all sign-in records by the user and their place in the User table.
     /// </summary>
     Task DeleteUserAsync(string accountId);
@@ -67,6 +75,16 @@ public interface IAuthService : IAuthMiddlewareService {
     /// Retrieves the current number of sessions for a given user. 
     /// </summary>
     Task<int> GetCurrentSessionCountAsync(string account);
+
+    /// <summary>
+    /// Returns true if there exists a user with that account name. Swallows errors and returns false if not. 
+    /// </summary>
+    Task<bool> AccountExistsAsync(Guid account);
+
+    /// <summary>
+    /// Returns true if there exists a user with that account name. Swallows errors and returns false if not. 
+    /// </summary>
+    Task<bool> AccountExistsAsync(string account);
 
     /// <summary>
     /// Returns the first <c>limit</c> users, given their AccountName, from the query. 

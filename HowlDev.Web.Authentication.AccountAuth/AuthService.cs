@@ -130,6 +130,27 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
             roleLookup[accountName] = newRole;
         }
     );
+
+
+    /// <inheritdoc />
+    public Task UpdateAccountNameAsync(Guid account, string newName) =>
+        conn.WithConnectionAsync(async conn => {
+            if (await AccountExistsAsync(newName)) {
+                throw new ArgumentException("Account name is already being used.");    
+            }
+
+            if (!await AccountExistsAsync(account)) {
+                throw new ArgumentException("Guid is not tied to a user.");
+            }
+
+            string oldAccount = await GetAccountNameAsync(account);
+            
+            await GlobalSignOutAsync(oldAccount);
+            var accNameUpdate = "update \"HowlDev.User\" p set accountName = @newName where id = @account";
+            await conn.ExecuteAsync(accNameUpdate, new { account, newName });
+            roleLookup.TryRemove(oldAccount, out _);
+            guidLookup.TryRemove(oldAccount, out _);
+        });
     #endregion
 
     #region Deletion/Sign Out
@@ -210,10 +231,36 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
         }
     );
 
+    /// <inheritdoc/>
+    public Task<bool> AccountExistsAsync(Guid account) => 
+        conn.WithConnectionAsync(async conn => {
+            logger.LogTrace("Entered AccountExistsAsync");
+            try {
+                string sql = "select count(*) from \"HowlDev.User\" where id = @account";
+                int count = await conn.QuerySingleAsync<int>(sql, new {account});
+                return count == 1;
+            } catch {
+                return false;
+            }
+        });
+
+    /// <inheritdoc/>
+    public Task<bool> AccountExistsAsync(string account) => 
+        conn.WithConnectionAsync(async conn => {
+            logger.LogTrace("Entered AccountExistsAsync");
+            try {
+                string sql = "select count(*) from \"HowlDev.User\" where accountName = @account";
+                int count = await conn.QuerySingleAsync<int>(sql, new {account});
+                return count == 1;
+            } catch {
+                return false;
+            }
+        });
 
     /// <inheritdoc />
     public Task<string> GetAccountNameAsync(Guid account) =>
         conn.WithConnectionAsync(async conn => {
+            logger.LogTrace("Entered GetAccountNameAsync");
             string sql = """select accountName from "HowlDev.User" where id = @account""";
             return await conn.QuerySingleAsync<string>(sql, new { account });
         });
