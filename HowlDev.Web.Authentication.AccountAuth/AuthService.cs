@@ -234,7 +234,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     /// <inheritdoc/>
     public Task<bool> AccountExistsAsync(Guid account) => 
         conn.WithConnectionAsync(async conn => {
-            logger.LogTrace("Entered AccountExistsAsync");
+            logger.LogTrace("Entered AccountExistsAsync (Guid)");
             try {
                 string sql = "select count(*) from \"HowlDev.User\" where id = @account";
                 int count = await conn.QuerySingleAsync<int>(sql, new {account});
@@ -247,7 +247,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     /// <inheritdoc/>
     public Task<bool> AccountExistsAsync(string account) => 
         conn.WithConnectionAsync(async conn => {
-            logger.LogTrace("Entered AccountExistsAsync");
+            logger.LogTrace("Entered AccountExistsAsync (Account name)");
             try {
                 string sql = "select count(*) from \"HowlDev.User\" where accountName = @account";
                 int count = await conn.QuerySingleAsync<int>(sql, new {account});
