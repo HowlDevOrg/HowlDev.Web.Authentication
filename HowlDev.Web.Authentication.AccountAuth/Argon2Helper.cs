@@ -7,32 +7,25 @@ namespace HowlDev.Web.Authentication.AccountAuth;
 /// An AI-generated class to hash and validate hashes, using the Konscious cryptography library. 
 /// </summary>
 internal static class Argon2Helper {
-    // Default parameters – tune to your hardware and security policy
-    private const int SaltSize = 16;          // 128‑bit
-    private const int HashSize = 32;          // 256‑bit
-    private const int Iterations = 2;         // time cost (passes)
-    private const int MemoryKB = 128 * 1024; // 128 MiB
-    private const int Parallelism = 4;        // lanes (threads)
-
     /// <summary>
     /// Generates a new random salt and includes it in the return string. 
     /// </summary>
-    public static string HashPassword(string password) {
-        byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
+    public static string HashPassword(string password, Argon2Options options) {
+        byte[] salt = RandomNumberGenerator.GetBytes(options.SaltSize);
 
         var argon2 = new Argon2id(System.Text.Encoding.UTF8.GetBytes(password)) {
             Salt = salt,
-            DegreeOfParallelism = Parallelism,
-            Iterations = Iterations,
-            MemorySize = MemoryKB   // expressed in KiB
+            DegreeOfParallelism = options.Parallelism,
+            Iterations = options.Iterations,
+            MemorySize = options.MemoryKB   // expressed in KiB
         };
 
-        byte[] hash = argon2.GetBytes(HashSize);
+        byte[] hash = argon2.GetBytes(options.HashSize);
 
         //    Format: $argon2id$v=19$m=131072,t=2,p=4$<base64(salt)>$<base64(hash)>
         string encoded = string.Concat(
             "$argon2id$",
-            $"m={MemoryKB},t={Iterations},p={Parallelism}$",
+            $"m={options.MemoryKB},t={options.Iterations},p={options.Parallelism}$",
             Convert.ToBase64String(salt), "$",
             Convert.ToBase64String(hash));
 

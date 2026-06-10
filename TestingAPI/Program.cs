@@ -1,7 +1,6 @@
 using HowlDev.Web.Authentication.AccountAuth;
 using HowlDev.Web.Authentication.Middleware;
 using System.Net;
-using System.Text.RegularExpressions;
 using TestingAPI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,9 +14,11 @@ builder.Services.AddLogging();
 
 var app = builder.Build();
 
+AuthService.UpdateArgonOptions(new Argon2Options(4, 256, 2));
+
 app.UseAccountIdentityMiddleware(options => {
     options.Paths = ["/users", "/user", "/user/signin", "/health"];
-    options.RegexPaths = [new Regex("ws/[1-9]+")];
+    // options.RegexPaths = [new Regex("ws/[1-9]+")];
     // options.HeaderAccount = "Lorem-Account"; // This works as expected
     // options.DisableHeaderInfo = true;
     // options.ExpirationDate = new TimeSpan(1, 0, 0, 0);
@@ -91,8 +92,6 @@ app.MapGet("/filters/custom", () => Results.Ok()).RequireRoleIs(i => i % 3 == 0)
 
 app.MapGet("/filters/string", () => Results.Ok()).RequireAccountNameIsEqualTo("Cody");
 app.MapGet("/filters/stringis", () => Results.Ok()).RequireAccountNameIs(s => s.Length < 3);
-
-app.MapGet("/ws/{id}", (int id) => id);
 
 app.Run();
 

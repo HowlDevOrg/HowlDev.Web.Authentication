@@ -5,6 +5,7 @@ using HowlDev.Web.Helpers.DbConnector;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace HowlDev.Web.Authentication.AccountAuth;
 
@@ -24,12 +25,13 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     private ConcurrentDictionary<string, Guid> guidLookup = new();
     private ConcurrentDictionary<string, int> roleLookup = new();
     private DbConnector conn = new DbConnector(config);
+    private static Argon2Options options = new();
 
     #region User Creation/Validation
     /// <inheritdoc />
     public Task AddUserAsync(string accountName, string defaultPassword = "password", int defaultRole = 0) =>
         conn.WithConnectionAsync(async conn => {
-            string passHash = Argon2Helper.HashPassword(defaultPassword);
+            string passHash = Argon2Helper.HashPassword(defaultPassword, options);
             Guid guid = Guid.NewGuid();
             var AddUser = "insert into \"HowlDev.User\" values (@guid, @accountName, @passHash, @defaultRole)";
             try {
@@ -116,7 +118,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     /// <inheritdoc />
     public Task UpdatePasswordAsync(string accountName, string newPassword) =>
         conn.WithConnectionAsync(async conn => {
-            string newHash = Argon2Helper.HashPassword(newPassword);
+            string newHash = Argon2Helper.HashPassword(newPassword, options);
             var pass = "update \"HowlDev.User\" p set passHash = @newHash where accountName = @accountName";
             await conn.ExecuteAsync(pass, new { accountName, newHash });
         }
@@ -136,7 +138,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     public Task UpdateAccountNameAsync(Guid account, string newName) =>
         conn.WithConnectionAsync(async conn => {
             if (await AccountExistsAsync(newName)) {
-                throw new ArgumentException("Account name is already being used.");    
+                throw new ArgumentException("Account name is already being used.");
             }
 
             if (!await AccountExistsAsync(account)) {
@@ -144,7 +146,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
             }
 
             string oldAccount = await GetAccountNameAsync(account);
-            
+
             await GlobalSignOutAsync(oldAccount);
             var accNameUpdate = "update \"HowlDev.User\" p set accountName = @newName where id = @account";
             await conn.ExecuteAsync(accNameUpdate, new { account, newName });
@@ -232,12 +234,12 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     );
 
     /// <inheritdoc/>
-    public Task<bool> AccountExistsAsync(Guid account) => 
+    public Task<bool> AccountExistsAsync(Guid account) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered AccountExistsAsync (Guid)");
             try {
                 string sql = "select count(*) from \"HowlDev.User\" where id = @account";
-                int count = await conn.QuerySingleAsync<int>(sql, new {account});
+                int count = await conn.QuerySingleAsync<int>(sql, new { account });
                 return count == 1;
             } catch {
                 return false;
@@ -245,12 +247,12 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
         });
 
     /// <inheritdoc/>
-    public Task<bool> AccountExistsAsync(string account) => 
+    public Task<bool> AccountExistsAsync(string account) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered AccountExistsAsync (Account name)");
             try {
                 string sql = "select count(*) from \"HowlDev.User\" where accountName = @account";
-                int count = await conn.QuerySingleAsync<int>(sql, new {account});
+                int count = await conn.QuerySingleAsync<int>(sql, new { account });
                 return count == 1;
             } catch {
                 return false;
@@ -267,6 +269,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
 
     #endregion
 
+    #region Queries
     /// <inheritdoc />
     public Task<int> GetCurrentSessionCountAsync(string account) =>
         conn.WithConnectionAsync(async conn => {
@@ -275,7 +278,6 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
             return await conn.QuerySingleAsync<int>(connCount, new { account });
         });
 
-    #region Queries
     /// <inheritdoc />
     public Task<IEnumerable<Account>> QueryUsersAsync(string query, int limit = 10) =>
         conn.WithConnectionAsync(async conn => {
@@ -366,4 +368,33 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
             }
         });
     #endregion
+
+    /// <summary>
+    /// Set the conditions for the hashing algorithm for your specific machine
+    /// to be as resilient as needed for your program and for the machine you're running 
+    /// it on.
+    /// 
+    /// This will be called every time you need to run a hash, which is only when a user 
+    /// is created or when they're signing in (in other words, rather infrequently), so 
+    /// choose some options that maximize the time the machine can spend making it secure.
+    /// </summary>
+    public static void UpdateArgonOptions(Argon2Options newOpts) =>
+        options = newOpts;
+
+    /// <summary>
+    /// Use with the <see cref="UpdateArgonOptions"/> method to benchmark the options
+    /// you provided in that method. It will pass in the string "lorem ipsum password" 
+    /// and time with a stopwatch how long the hash took, returning the time in milliseconds
+    /// which you can print to the screen.
+    /// 
+    /// You should try to maximize the memory usage and get it ideally above 0.5 seconds 
+    /// (or 500 ms as this will return), close to 1 second is best.
+    /// </summary>
+    public static int BenchmarkArgonOptions() {
+        Stopwatch watch = Stopwatch.StartNew();
+        Argon2Helper.HashPassword("lorem ipsum password", options);
+        watch.Stop();
+        return (int)watch.ElapsedMilliseconds;
+    }
+
 }
