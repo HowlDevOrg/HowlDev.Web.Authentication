@@ -23,14 +23,13 @@ public partial class IdentityMiddleware {
     private readonly ILogger<IdentityMiddleware> logger;
 
     /// <summary/>
-    public IdentityMiddleware(RequestDelegate _next, IAuthMiddlewareService _service, IDMiddlewareConfig _config, ILogger<IdentityMiddleware> _logger)
-    {
+    public IdentityMiddleware(RequestDelegate _next, IAuthMiddlewareService _service, IDMiddlewareConfig _config, ILogger<IdentityMiddleware> _logger) {
         next = _next;
         service = _service;
         config = _config;
         logger = _logger;
     }
-    
+
     /// <summary/>
     public async Task InvokeAsync(HttpContext context) {
         logger.LogTrace("Entered middleware method.");

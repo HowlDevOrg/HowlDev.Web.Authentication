@@ -4,7 +4,6 @@ using HowlDev.Web.Authentication.Middleware;
 using HowlDev.Web.Helpers.DbConnector;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace HowlDev.Web.Authentication.AccountAuth;
@@ -21,9 +20,7 @@ namespace HowlDev.Web.Authentication.AccountAuth;
 /// }
 /// </code>
 /// </summary>
-public partial class AuthService(IConfiguration config, ILogger<AuthService> logger) : IAuthService, IAuthMiddlewareService {
-    private ConcurrentDictionary<string, Guid> guidLookup = new();
-    private ConcurrentDictionary<string, int> roleLookup = new();
+public class AuthService(IConfiguration config, ILogger<AuthService> logger) : IAuthService, IAuthMiddlewareService {
     private DbConnector conn = new DbConnector(config);
     private static Argon2Options options = new();
 
@@ -60,11 +57,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     public Task<IEnumerable<Account>> GetAllUsersAsync() =>
         conn.WithConnectionAsync(async conn => {
             var GetUsers = "select p.id, p.accountName, p.role from \"HowlDev.User\" p order by 1";
-            try {
-                return await conn.QueryAsync<Account>(GetUsers);
-            } catch {
-                return [];
-            }
+            return await conn.QueryAsync<Account>(GetUsers);
         }
     );
 
@@ -129,7 +122,6 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
         conn.WithConnectionAsync(async conn => {
             var role = "update \"HowlDev.User\" p set role = @newRole where accountName = @accountName";
             await conn.ExecuteAsync(role, new { accountName, newRole });
-            roleLookup[accountName] = newRole;
         }
     );
 
@@ -150,8 +142,6 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
             await GlobalSignOutAsync(oldAccount);
             var accNameUpdate = "update \"HowlDev.User\" p set accountName = @newName where id = @account";
             await conn.ExecuteAsync(accNameUpdate, new { account, newName });
-            roleLookup.TryRemove(oldAccount, out _);
-            guidLookup.TryRemove(oldAccount, out _);
         });
     #endregion
 
@@ -193,43 +183,23 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     #endregion
 
     #region Search
-    /// <summary>
-    /// Returns the Guid of a given account name. Has an internal dictionary to reduce 
-    /// database calls and enable quick lookup.
-    /// </summary>
+    /// <inheritdoc/>
     public Task<Guid> GetGuidAsync(string account) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered GetGuidAsync");
-            if (guidLookup.TryGetValue(account, out Guid theirGuid)) {
-                logger.LogDebug("GuidLookup contained key.");
-                return theirGuid;
-            } else {
-                logger.LogDebug("GuidLookup did not contain the key.");
-                string guid = "select id from \"HowlDev.User\" where accountName = @account";
-                theirGuid = await conn.QuerySingleAsync<Guid>(guid, new { account });
-                guidLookup.AddOrUpdate(account, theirGuid, (existingKey, existingValue) => theirGuid);
-                return theirGuid;
-            }
+            string guid = "select id from \"HowlDev.User\" where accountName = @account";
+            Guid theirGuid = await conn.QuerySingleAsync<Guid>(guid, new { account });
+            return theirGuid;
         }
     );
 
-    /// <summary>
-    /// Returns the Role of a given account name. Has an internal dictionary to reduce database calls
-    /// and enable quick lookups. 
-    /// </summary>
+    /// <inheritdoc/>
     public Task<int> GetRoleAsync(string account) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered GetRoleAsync");
-            if (roleLookup.TryGetValue(account, out int theirRole)) {
-                logger.LogDebug("RoleLookup contained key.");
-                return theirRole;
-            } else {
-                logger.LogDebug("RoleLookup did not contain the key.");
-                string role = "select role from \"HowlDev.User\" where accountName = @account";
-                theirRole = await conn.QuerySingleAsync<int>(role, new { account });
-                roleLookup.AddOrUpdate(account, theirRole, (existingKey, existingValue) => theirRole);
-                return theirRole;
-            }
+            string role = "select role from \"HowlDev.User\" where accountName = @account";
+            int theirRole = await conn.QuerySingleAsync<int>(role, new { account });
+            return theirRole;
         }
     );
 
@@ -237,26 +207,16 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     public Task<bool> AccountExistsAsync(Guid account) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered AccountExistsAsync (Guid)");
-            try {
-                string sql = "select count(*) from \"HowlDev.User\" where id = @account";
-                int count = await conn.QuerySingleAsync<int>(sql, new { account });
-                return count == 1;
-            } catch {
-                return false;
-            }
+            string sql = "select exists (select * from \"HowlDev.User\" where id = @account)";
+            return await conn.QuerySingleAsync<bool>(sql, new { account });
         });
 
     /// <inheritdoc/>
     public Task<bool> AccountExistsAsync(string account) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered AccountExistsAsync (Account name)");
-            try {
-                string sql = "select count(*) from \"HowlDev.User\" where accountName = @account";
-                int count = await conn.QuerySingleAsync<int>(sql, new { account });
-                return count == 1;
-            } catch {
-                return false;
-            }
+            string sql = "select exists (select * from \"HowlDev.User\" where  accountName = @account)";
+            return await conn.QuerySingleAsync<bool>(sql, new { account });
         });
 
     /// <inheritdoc />
@@ -388,7 +348,7 @@ public partial class AuthService(IConfiguration config, ILogger<AuthService> log
     /// which you can print to the screen.
     /// 
     /// You should try to maximize the memory usage and get it ideally above 0.5 seconds 
-    /// (or 500 ms as this will return), close to 1 second is best.
+    /// (or 500 ms as this will return), close to 1 second is better.
     /// </summary>
     public static int BenchmarkArgonOptions() {
         Stopwatch watch = Stopwatch.StartNew();
