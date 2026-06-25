@@ -78,17 +78,12 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
 
     #region Validation
     /// <inheritdoc />
-    public Task<DateTime> GetValidatedOnForKeyAsync(string accountName, string key) =>
+    public Task<DateTime?> GetValidatedOnForKeyAsync(string accountName, string key) =>
         conn.WithConnectionAsync(async conn => {
             var validKey = "select k.validatedon from \"HowlDev.Key\" k where accountId = @accountName and apiKey = @key";
-            return await conn.QuerySingleAsync<DateTime>(validKey, new { accountName, key });
+            return await conn.QuerySingleOrDefaultAsync<DateTime?>(validKey, new { accountName, key });
         }
     );
-
-    /// <inheritdoc/>
-    public Task<Result<DateTime>> TryGetValidatedOnForKeyAsync(string accountName, string key) {
-        throw new NotImplementedException();
-    }
 
     /// <inheritdoc />
     public Task<bool> IsValidUserPassAsync(string accountName, string password) =>

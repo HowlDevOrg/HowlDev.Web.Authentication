@@ -82,11 +82,10 @@ public partial class IdentityMiddleware {
             }
 
 
-            DateTime? output;
-            try {
-                output = await service.GetValidatedOnForKeyAsync(account, key);
+            DateTime? output = await service.GetValidatedOnForKeyAsync(account, key);
+            if (output is not null) {
                 LogDateResult(output);
-            } catch {
+            } else {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("API key does not exist.");
                 AuthMetrics.UnknownApiKeys.Add(1);

@@ -15,23 +15,13 @@ public interface IAuthMiddlewareService {
     Task<Result<Account>> TryGetUserAsync(string account);
 
     /// <summary>
-    /// Returns a date for when the API key was last updated in the <c>validatedOn</c> field.
-    /// Throws an exception if no API key exists in the table. 
+    /// Returns a date for when the API key was last updated in the <c>validatedOn</c> field, or null 
+    /// if it doesn't exist. 
     /// </summary>
     /// <param name="accountName">Account used</param>
     /// <param name="key">API Key</param>
-    /// <returns>DateTime</returns>
-    /// <exception cref="InvalidOperationException"/>
-    Task<DateTime> GetValidatedOnForKeyAsync(string accountName, string key);
-
-    /// <summary>
-    /// Returns a date for when the API key was last updated in the <c>validatedOn</c> field.
-    /// Returns an invalid Result object if no user exists. 
-    /// </summary>
-    /// <param name="accountName">Account used</param>
-    /// <param name="key">API Key</param>
-    /// <returns>DateTime</returns>
-    Task<Result<DateTime>> TryGetValidatedOnForKeyAsync(string accountName, string key);
+    /// <returns>DateTime or null</returns>
+    Task<DateTime?> GetValidatedOnForKeyAsync(string accountName, string key);
 
     /// <summary>
     /// Updates the api key with the current DateTime value. This allows recently 
