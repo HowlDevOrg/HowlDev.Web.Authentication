@@ -30,40 +30,40 @@ public static class AuthMetrics {
     /// <summary>
     /// Count of how many accounts could not be found.
     /// </summary>
-    public static readonly Counter<ulong> UnknownAccounts =
-        _meter.CreateCounter<ulong>("auth_unknown_accounts");
+    public static readonly Counter<long> UnknownAccounts =
+        _meter.CreateCounter<long>("auth_unknown_accounts");
 
     /// <summary>
     /// Count of how many requests had incorrect headers.
     /// </summary>
-    public static readonly Counter<ulong> IncorrectHeaders =
-        _meter.CreateCounter<ulong>("auth_incorrect_headers");
+    public static readonly Counter<long> IncorrectHeaders =
+        _meter.CreateCounter<long>("auth_incorrect_headers");
 
     /// <summary>
     /// Count of how many requests were whitelisted past the 
     /// middleware.
     /// </summary>
-    public static readonly Counter<ulong> WhitelistPaths =
-        _meter.CreateCounter<ulong>("auth_whitelisted_requests");
+    public static readonly Counter<long> WhitelistPaths =
+        _meter.CreateCounter<long>("auth_whitelisted_requests");
 
     /// <summary>
     /// Count of how many requests were whitelisted via the 
     /// Path parameter past the middleware.
     /// </summary>
-    public static readonly Counter<ulong> PathExclusions =
-        _meter.CreateCounter<ulong>("auth_path_excluded_requests");
+    public static readonly Counter<long> PathExclusions =
+        _meter.CreateCounter<long>("auth_path_excluded_requests");
 
     /// <summary>
     /// Count of how many requests were whitelisted via the 
     /// Regex parameter past the middleware.
     /// </summary>
-    public static readonly Counter<ulong> RegexExclusions =
-        _meter.CreateCounter<ulong>("auth_regex_excluded_requests");
+    public static readonly Counter<long> RegexExclusions =
+        _meter.CreateCounter<long>("auth_regex_excluded_requests");
 
     /// <summary>
     /// Count of how many requests were whitelisted via the 
     /// Regex parameter past the middleware.
     /// </summary>
-    public static readonly Counter<ulong> ValidatedRequests =
-        _meter.CreateCounter<ulong>("auth_validated_requests");
+    public static readonly Counter<long> ValidatedRequests =
+        _meter.CreateCounter<long>("auth_validated_requests");
 }
