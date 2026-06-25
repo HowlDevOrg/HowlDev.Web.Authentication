@@ -69,6 +69,11 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
             };
         }
     );
+
+    /// <inheritdoc/>
+    public Task<Result<Account>> TryGetUserAsync(string account) {
+        throw new NotImplementedException();
+    }
     #endregion
 
     #region Validation
@@ -79,6 +84,11 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
             return await conn.QuerySingleAsync<DateTime>(validKey, new { accountName, key });
         }
     );
+
+    /// <inheritdoc/>
+    public Task<Result<DateTime>> TryGetValidatedOnForKeyAsync(string accountName, string key) {
+        throw new NotImplementedException();
+    }
 
     /// <inheritdoc />
     public Task<bool> IsValidUserPassAsync(string accountName, string password) =>
@@ -353,15 +363,5 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
         Argon2Helper.HashPassword("lorem ipsum password", options);
         watch.Stop();
         return (int)watch.ElapsedMilliseconds;
-    }
-
-    /// <inheritdoc/>
-    public Task<Result<Account>> TryGetUserAsync(string account) {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc/>
-    public Task<Result<DateTime>> TryGetValidatedOnForKeyAsync(string accountName, string key) {
-        throw new NotImplementedException();
     }
 }
