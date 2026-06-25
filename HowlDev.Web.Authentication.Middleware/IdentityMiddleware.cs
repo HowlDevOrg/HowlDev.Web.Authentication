@@ -43,15 +43,19 @@ public partial class IdentityMiddleware {
 
         if (startsWith) {
             logger.LogDebug("Whitelist skipped authentication.");
+            AuthMetrics.WhitelistPaths.Add(1);
             await next(context);
         } else if (config.Paths.Any(c => c.Contains(path))) {
             logger.LogDebug("Paths excluded current request.");
+            AuthMetrics.PathExclusions.Add(1);
             await next(context);
         } else if (config.RegexPaths.Any(c => c.IsMatch(path))) {
             logger.LogDebug("Regex excluded current request.");
+            AuthMetrics.RegexExclusions.Add(1);
             await next(context);
         } else {
             // Validate user here
+            AuthMetrics.ValidatedRequests.Add(1);
             string? account = context.Request.Headers[config.HeaderAccount];
             string? key = context.Request.Headers[config.HeaderKey];
             if (string.IsNullOrEmpty(account) || string.IsNullOrEmpty(key)) {
@@ -62,6 +66,7 @@ public partial class IdentityMiddleware {
                     await context.Response.WriteAsync($"Unauthorized: Missing header(s).\nRequires an \"{config.HeaderAccount}\" and \"{config.HeaderKey}\" header.");
                 }
 
+                AuthMetrics.IncorrectHeaders.Add(1);
                 logger.LogInformation("Two required headers were not found.");
                 return;
             }
@@ -75,6 +80,7 @@ public partial class IdentityMiddleware {
             } else {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Account does not exist.");
+                AuthMetrics.UnknownAccounts.Add(1);
                 LogAccountName(account);
                 return;
             }
