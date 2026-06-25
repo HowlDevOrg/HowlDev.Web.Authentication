@@ -71,8 +71,16 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
     );
 
     /// <inheritdoc/>
-    public Task<Result<Account>> TryGetUserAsync(string account) {
-        throw new NotImplementedException();
+    public async Task<Result<Account>> TryGetUserAsync(string account) {
+        Result<Guid> id = await TryGetGuidAsync(account);
+        if (!id.IsValid) return new Result<Account>();
+
+        Result<int> role = await TryGetRoleAsync(account);
+        if (!role.IsValid) return new Result<Account>();
+
+        return new Result<Account>(new Account {
+            Id = id.Value, AccountName = account, Role = role.Value
+        });
     }
     #endregion
 
