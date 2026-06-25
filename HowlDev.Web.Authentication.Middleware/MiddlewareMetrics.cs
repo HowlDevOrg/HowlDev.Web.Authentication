@@ -7,7 +7,7 @@ namespace HowlDev.Web.Authentication.Middleware;
 /// string to use is <c>HowlDev.Web.Authentication.Middleware</c>. 
 /// </summary>
 public static class AuthMetrics {
-    private static readonly Meter _meter = new("HowlDev.Web.Authentication.Middleware", "1.0.0");
+    private static readonly Meter _meter = new("HowlDev.Web.Authentication.Middleware");
 
     /// <summary>
     /// Count of how many keys had their timer reset.

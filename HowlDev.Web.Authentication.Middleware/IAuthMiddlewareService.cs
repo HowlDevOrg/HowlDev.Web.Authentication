@@ -15,7 +15,8 @@ public interface IAuthMiddlewareService {
     /// </summary>
     /// <param name="accountName">Account used</param>
     /// <param name="key">API Key</param>
-    /// <returns>Null or DateTime</returns>
+    /// <returns>DateTime</returns>
+    /// <exception cref="InvalidOperationException"/>
     Task<DateTime> GetValidatedOnForKeyAsync(string accountName, string key);
 
     /// <summary>

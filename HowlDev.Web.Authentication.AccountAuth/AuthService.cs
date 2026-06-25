@@ -28,15 +28,14 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
     /// <inheritdoc />
     public Task AddUserAsync(string accountName, string defaultPassword = "password", int defaultRole = 0) =>
         conn.WithConnectionAsync(async conn => {
-            string passHash = Argon2Helper.HashPassword(defaultPassword, options);
-            Guid guid = Guid.NewGuid();
-            var AddUser = "insert into \"HowlDev.User\" values (@guid, @accountName, @passHash, @defaultRole)";
-            try {
-                await conn.ExecuteAsync(AddUser, new { guid, accountName, passHash, defaultRole });
-            } catch (Exception e) {
-                logger.LogError("AddUserAsync threw an error: {e}", e);
+            if (await AccountExistsAsync(accountName)) {
                 throw new ArgumentException("Account name already exists.");
             }
+
+            string passHash = Argon2Helper.HashPassword(defaultPassword, options);
+            Guid guid = Guid.NewGuid();
+            await conn.ExecuteAsync("insert into \"HowlDev.User\" values (@guid, @accountName, @passHash, @defaultRole)",
+                new { guid, accountName, passHash, defaultRole });
         }
     );
 
@@ -46,8 +45,9 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
             string newApiKey = StringHelper.GenerateRandomString(20);
             DateTime now = DateTime.Now;
 
-            var addValidation = "insert into \"HowlDev.Key\" (accountId, apiKey, validatedOn) values (@accountName, @newApiKey, @now)";
-            await conn.ExecuteAsync(addValidation, new { accountName, newApiKey, now });
+            await conn.ExecuteAsync(
+                "insert into \"HowlDev.Key\" (accountId, apiKey, validatedOn) values (@accountName, @newApiKey, @now)",
+                new { accountName, newApiKey, now });
 
             return newApiKey;
         }
@@ -55,10 +55,8 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
 
     /// <inheritdoc />
     public Task<IEnumerable<Account>> GetAllUsersAsync() =>
-        conn.WithConnectionAsync(async conn => {
-            var GetUsers = "select p.id, p.accountName, p.role from \"HowlDev.User\" p order by 1";
-            return await conn.QueryAsync<Account>(GetUsers);
-        }
+        conn.WithConnectionAsync(async conn =>
+        await conn.QueryAsync<Account>("select p.id, p.accountName, p.role from \"HowlDev.User\" p order by 1")
     );
 
     /// <inheritdoc />
@@ -356,5 +354,4 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
         watch.Stop();
         return (int)watch.ElapsedMilliseconds;
     }
-
 }
