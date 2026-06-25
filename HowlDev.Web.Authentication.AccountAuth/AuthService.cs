@@ -79,7 +79,9 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
         if (!role.IsValid) return new Result<Account>();
 
         return new Result<Account>(new Account {
-            Id = id.Value, AccountName = account, Role = role.Value
+            Id = id.Value,
+            AccountName = account,
+            Role = role.Value
         });
     }
     #endregion
@@ -97,14 +99,13 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
     public Task<bool> IsValidUserPassAsync(string accountName, string password) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered IsValidUserPassAsync.");
-            try {
-                var pass = "select p.passHash from \"HowlDev.User\" p where accountName = @accountName";
-                string storedPassword = await conn.QuerySingleAsync<string>(pass, new { accountName });
-                return Argon2Helper.VerifyPassword(storedPassword, password);
-            } catch (Exception e) {
-                logger.LogWarning("Error: {a}", e);
+            if (!await AccountExistsAsync(accountName)) {
                 return false;
             }
+
+            var pass = "select p.passHash from \"HowlDev.User\" p where accountName = @accountName";
+            string storedPassword = await conn.QuerySingleAsync<string>(pass, new { accountName });
+            return Argon2Helper.VerifyPassword(storedPassword, password);
         }
     );
 
@@ -364,6 +365,7 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
         });
     #endregion
 
+    #region Argon
     /// <summary>
     /// Set the conditions for the hashing algorithm for your specific machine
     /// to be as resilient as needed for your program and for the machine you're running 
@@ -391,4 +393,5 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
         watch.Stop();
         return (int)watch.ElapsedMilliseconds;
     }
+    #endregion
 }

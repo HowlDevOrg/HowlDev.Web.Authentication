@@ -12,7 +12,8 @@ public interface IAuthService : IAuthMiddlewareService {
     Task AddUserAsync(string accountName, string defaultPassword, int defaultRole);
 
     /// <summary>
-    /// Adds a new line to the API key table.
+    /// Adds a new line to the API key table. Should only be called after validating 
+    /// with <see cref="IsValidUserPassAsync"/>.
     /// </summary>
     /// <returns>API key</returns>
     Task<string> NewSignInAsync(string accountName);
@@ -25,7 +26,7 @@ public interface IAuthService : IAuthMiddlewareService {
 
     /// <summary>
     /// Returns True if the username and password match what's stored in the database. This 
-    /// handles errors thrown by invalid users and simply returns False.
+    /// first checks a user exists and returns False if not.
     /// </summary>
     /// <returns>If the hashed password equals the stored hash</returns>
     Task<bool> IsValidUserPassAsync(string accountName, string password);

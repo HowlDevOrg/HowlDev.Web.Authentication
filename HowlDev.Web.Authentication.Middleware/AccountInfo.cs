@@ -37,7 +37,7 @@ public class AccountInfo {
     /// </summary>
     public static ValueTask<AccountInfo> BindAsync(HttpContext context) {
         if (!context.Items.ContainsKey("Account")) {
-            throw new InvalidOperationException("AccountInfo must be applied to endpoints where the middleware checks.");    
+            throw new InvalidOperationException("AccountInfo must be applied to endpoints where the middleware checks.");
         }
 
         string accountName = (string)context.Items["Account"]!;
