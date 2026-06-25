@@ -67,6 +67,7 @@ app.MapGet("/user/valid", () => Results.Ok());
 app.MapGet("/user/exists", (AuthService svc, string user) => svc.AccountExistsAsync(user));
 app.MapGet("/user/guid", (AccountInfo info) => info.Guid);
 app.MapGet("/user/role", (AccountInfo info) => info.Role);
+app.MapGet("/user/key", (AccountInfo info) => info.ApiKey);
 
 app.MapGet("/user/role/gt/{role}", (int role, AuthService svc) => svc.QueryUsersAboveRoleAsync(role));
 app.MapGet("/user/guid/get", (AccountInfo info, AuthService svc) => svc.GetAccountNameAsync(info.Guid));

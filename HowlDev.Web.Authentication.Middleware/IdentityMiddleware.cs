@@ -72,6 +72,7 @@ public partial class IdentityMiddleware {
                 context.Items["Guid"] = acc.Id;
                 context.Items["Role"] = acc.Role;
                 context.Items["Account"] = account;
+                context.Items["Key"] = key;
                 logger.LogTrace("Filled context.Items with account information.");
             } catch {
                 context.Response.StatusCode = 401;

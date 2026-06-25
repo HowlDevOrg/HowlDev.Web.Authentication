@@ -1,7 +1,7 @@
 @AA = http://localhost:5133
 @Username = Cody2
 @Password = password
-@Key = jScbw!u4LF0ljPzoixF4
+@Key = Fd9EvwcZflF1az8Tahqe
 
 ###
 GET {{AA}}/health
@@ -12,7 +12,7 @@ GET {{AA}}/user/exact?account=Cody
 Account-Auth-Account: {{Username}}
 Account-Auth-ApiKey: {{Key}}
 ###
-POST {{AA}}/user?accountName=Admin
+POST {{AA}}/user?accountName=Cody2
 ###
 POST {{AA}}/user/signin
 Content-Type: application/json
@@ -35,6 +35,10 @@ Account-Auth-Account: {{Username}}
 Account-Auth-ApiKey: {{Key}}
 ###
 GET {{AA}}/user/role
+Account-Auth-Account: {{Username}}
+Account-Auth-ApiKey: {{Key}}
+###
+GET {{AA}}/user/key
 Account-Auth-Account: {{Username}}
 Account-Auth-ApiKey: {{Key}}
 ###

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.Reflection;
 
 namespace HowlDev.Web.Authentication.Middleware;
 
@@ -36,15 +35,13 @@ public class AccountInfo {
     /// <summary>
     /// Is this even visible? I don't think so. 
     /// </summary>
-    public static ValueTask<AccountInfo> BindAsync(HttpContext context, ParameterInfo parameter) {
-        if (!context.Request.Headers.TryGetValue("Account-Auth-Account", out var accountName)) {
-            throw new Exception("Do not use without IdentityMiddleware; wrong path (missing account)");
+    public static ValueTask<AccountInfo> BindAsync(HttpContext context) {
+        if (!context.Items.ContainsKey("Account")) {
+            throw new InvalidOperationException("AccountInfo must be applied to endpoints where the middleware checks.");    
         }
 
-        if (!context.Request.Headers.TryGetValue("Account-Auth-ApiKey", out var apiKey)) {
-            throw new Exception("Do not use without IdentityMiddleware; wrong path (missing API key)");
-        }
-
+        string accountName = (string)context.Items["Account"]!;
+        string apiKey = (string)context.Items["Key"]!;
         Guid guid = (Guid)context.Items["Guid"]!;
         int role = (int)context.Items["Role"]!;
 
