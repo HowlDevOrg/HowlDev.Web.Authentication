@@ -38,17 +38,12 @@ public class IDMiddlewareConfig {
     public TimeSpan? ReValidationDate { get; set; }
 
     /// <summary>
-    /// Enables all levels of Traces, Debug, Information, and Error 
-    /// in the IdentityMiddleware. Set different logging levels in appsettings.json.
-    /// </summary>
-    public bool EnableLogging { get; set; }
-
-    /// <summary>
     /// Removes detailed error messages with invalid headers. As you shouldn't broadcast 
     /// what headers are needed to bypass an authentication middleware, this should be disabled 
-    /// in production (and after you get your frontend API calls set up). 
+    /// (set to true) in production (and after you get your frontend API calls set up). <br/>
+    /// Defaults to <c>true</c>.
     /// </summary>
-    public bool DisableHeaderInfo { get; set; }
+    public bool DisableHeaderInfo { get; set; } = true;
 
     /// <summary>
     /// Specify the header name for the account name which the middleware checks for valid account names. <br/>

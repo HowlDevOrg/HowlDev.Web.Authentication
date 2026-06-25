@@ -15,6 +15,7 @@ builder.Services.AddLogging();
 var app = builder.Build();
 
 AuthService.UpdateArgonOptions(new Argon2Options(4, 256, 2));
+// Console.WriteLine(AuthService.BenchmarkArgonOptions());
 
 app.UseAccountIdentityMiddleware(options => {
     options.Paths = ["/users", "/user", "/user/signin", "/health"];
@@ -22,7 +23,6 @@ app.UseAccountIdentityMiddleware(options => {
     // options.HeaderAccount = "Lorem-Account"; // This works as expected
     // options.DisableHeaderInfo = true;
     // options.ExpirationDate = new TimeSpan(1, 0, 0, 0);
-    // options.EnableLogging = true;
 });
 
 app.UseRouting();

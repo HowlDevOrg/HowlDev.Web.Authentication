@@ -19,8 +19,12 @@ namespace HowlDev.Web.Authentication.Middleware;
 public partial class IdentityMiddleware {
     private readonly RequestDelegate next;
     private readonly IAuthMiddlewareService service;
-    private readonly IDMiddlewareConfig config;
     private readonly ILogger<IdentityMiddleware> logger;
+    /// <summary>
+    /// The current configuration object for path bypass, headers, and 
+    /// validation timeouts.
+    /// </summary>
+    public static IDMiddlewareConfig config { get; private set; } = new();
 
     /// <summary/>
     public IdentityMiddleware(RequestDelegate _next, IAuthMiddlewareService _service, IDMiddlewareConfig _config, ILogger<IdentityMiddleware> _logger) {
