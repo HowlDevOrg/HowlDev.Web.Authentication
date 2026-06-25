@@ -354,4 +354,14 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
         watch.Stop();
         return (int)watch.ElapsedMilliseconds;
     }
+
+    /// <inheritdoc/>
+    public Task<Result<Account>> TryGetUserAsync(string account) {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc/>
+    public Task<Result<DateTime>> TryGetValidatedOnForKeyAsync(string accountName, string key) {
+        throw new NotImplementedException();
+    }
 }
