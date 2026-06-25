@@ -197,12 +197,36 @@ public class AuthService(IConfiguration config, ILogger<AuthService> logger) : I
     );
 
     /// <inheritdoc/>
+    public Task<Result<Guid>> TryGetGuidAsync(string account) =>
+        conn.WithConnectionAsync(async conn => {
+            logger.LogTrace("Entered TryGetGuidAsync");
+            string guid = "select id from \"HowlDev.User\" where accountName = @account";
+            Guid? theirGuid = await conn.QuerySingleOrDefaultAsync<Guid?>(guid, new { account });
+
+            if (theirGuid is null) return new Result<Guid>();
+            return new Result<Guid>((Guid)theirGuid);
+        }
+    );
+
+    /// <inheritdoc/>
     public Task<int> GetRoleAsync(string account) =>
         conn.WithConnectionAsync(async conn => {
             logger.LogTrace("Entered GetRoleAsync");
             string role = "select role from \"HowlDev.User\" where accountName = @account";
             int theirRole = await conn.QuerySingleAsync<int>(role, new { account });
             return theirRole;
+        }
+    );
+
+    /// <inheritdoc/>
+    public Task<Result<int>> TryGetRoleAsync(string account) =>
+        conn.WithConnectionAsync(async conn => {
+            logger.LogTrace("Entered TryGetRoleAsync");
+            string role = "select role from \"HowlDev.User\" where accountName = @account";
+            int? theirRole = await conn.QuerySingleOrDefaultAsync<int?>(role, new { account });
+
+            if (theirRole is null) return new Result<int>();
+            return new Result<int>((int)theirRole);
         }
     );
 

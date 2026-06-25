@@ -66,15 +66,13 @@ public partial class IdentityMiddleware {
                 return;
             }
 
-            try {
-                logger.LogTrace("Filling context.Items with account information.");
-                Account acc = await service.GetUserAsync(account);
-                context.Items["Guid"] = acc.Id;
-                context.Items["Role"] = acc.Role;
+            Result<Account> acc = await service.TryGetUserAsync(account);
+            if (acc.IsValid) {
+                context.Items["Guid"] = acc.Value.Id;
+                context.Items["Role"] = acc.Value.Role;
                 context.Items["Account"] = account;
                 context.Items["Key"] = key;
-                logger.LogTrace("Filled context.Items with account information.");
-            } catch {
+            } else {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Account does not exist.");
                 LogAccountName(account);
@@ -100,7 +98,7 @@ public partial class IdentityMiddleware {
             }
 
 
-            TimeSpan? timeBetween = DateTime.Now.ToUniversalTime() - output;
+            TimeSpan timeBetween = DateTime.Now.ToUniversalTime() - (DateTime)output;
             if (timeBetween < config.ExpirationDate) {
                 LogTimeRemaining(timeBetween);
                 if (config.ReValidationDate is not null &&

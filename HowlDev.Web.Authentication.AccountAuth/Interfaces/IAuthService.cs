@@ -67,9 +67,21 @@ public interface IAuthService : IAuthMiddlewareService {
     Task<Guid> GetGuidAsync(string account);
 
     /// <summary>
+    /// Returns the Guid of a given account name, wrapped safely in a Result&lt;Guid&gt; 
+    /// to not throw exceptions.
+    /// </summary>
+    Task<Result<Guid>> TryGetGuidAsync(string account);
+
+    /// <summary>
     /// Returns the Role of a given account name. 
     /// </summary>
     Task<int> GetRoleAsync(string account);
+
+    /// <summary>
+    /// Returns the Role of a given account name, wrapped safely in a Result&lt;int&gt; 
+    /// to not throw exceptions.
+    /// </summary>
+    Task<Result<int>> TryGetRoleAsync(string account);
 
     /// <summary>
     /// Retrieves the current number of sessions for a given user. 
