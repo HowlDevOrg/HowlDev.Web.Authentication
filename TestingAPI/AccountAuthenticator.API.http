@@ -1,7 +1,7 @@
 @AA = http://localhost:5133
 @Username = Cody2
 @Password = password
-@Key = Fd9EvwcZflF1az8Tahqe
+@Key = gVXcGzSMDNyHGUck9G7x
 
 ###
 GET {{AA}}/health
@@ -90,4 +90,12 @@ Account-Auth-Account: {{Username}}
 Account-Auth-ApiKey: {{Key}}
 ###
 GET {{AA}}/ws/50453
+###
+
+# Optional auth testing
+GET {{AA}}/user/signin
+Account-Auth-Account: {{Username}}
+Account-Auth-ApiKey: {{Key}}
+###
+GET {{AA}}/user/signin
 ###

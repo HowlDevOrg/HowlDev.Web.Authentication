@@ -54,10 +54,10 @@ public class TryAccountInfo {
     /// Is this even visible? I don't think so. 
     /// </summary>
     public static ValueTask<TryAccountInfo> BindAsync(HttpContext context) {
-        if (!context.Items.ContainsKey(MagicStrings.HttpContextAcc)) {
-            return ValueTask.FromResult(new TryAccountInfo());
+        if (context.Items.ContainsKey(MagicStrings.HttpContextAcc)) {
+            throw new Exception("This path is already covered by the Auth middleware. Use AccountInfo instead.");
         }
 
-        return ValueTask.FromResult(new TryAccountInfo(context));
+        return ValueTask.FromResult(new TryAccountInfo());
     }
 }
