@@ -41,6 +41,16 @@ app.MapPost("/user", async (AuthService service, string accountName) => {
     }
 });
 
+// Testing my TryAccountValue and attempt filter
+// This is a whitelisted path in the middleware, but I can still try and get info from it.
+app.MapGet("/user/signin", async (TryAccountInfo info) => {
+    if (info.IsValid) {
+        return Results.Ok($"Guid: ${info.Guid}, Name: ${info.AccountName}");
+    }
+
+    return Results.Ok("Account not validated.");
+});
+
 app.MapPost("/user/signin", async (AuthService service, SignIn obj) => {
     if (await service.IsValidUserPassAsync(obj.user, obj.pass)) {
         return Results.Ok(await service.NewSignInAsync(obj.user));
