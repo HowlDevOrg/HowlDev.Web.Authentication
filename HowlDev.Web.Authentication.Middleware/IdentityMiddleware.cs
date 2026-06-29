@@ -75,20 +75,14 @@ public partial class IdentityMiddleware {
                 return;
             }
 
-            Result<Account> acc = await service.TryGetUserAsync(account);
-            if (acc.IsValid) {
-                context.Items[MagicStrings.HttpContextGuid] = acc.Value.Id;
-                context.Items[MagicStrings.HttpContextRole] = acc.Value.Role;
-                context.Items[MagicStrings.HttpContextAcc] = account;
-                context.Items[MagicStrings.HttpContextKey] = key;
-            } else {
+            string? errorMessage = await TryFillingAccountInfo(context, account, key);
+            if (errorMessage is not null) {
                 context.Response.StatusCode = 401;
-                await context.Response.WriteAsync("Account does not exist.");
+                await context.Response.WriteAsync(errorMessage);
                 AuthMetrics.UnknownAccounts.Add(1);
                 LogAccountName(account);
                 return;
             }
-
 
             DateTime? output = await service.GetValidatedOnForKeyAsync(account, key);
             if (output is not null) {
@@ -130,6 +124,20 @@ public partial class IdentityMiddleware {
         }
 
         logger.LogTrace("Exiting middleware method.");
+    }
+
+    private async Task<string?> TryFillingAccountInfo(HttpContext context, string account, string key) {
+        Result<Account> acc = await service.TryGetUserAsync(account);
+        if (acc.IsValid) {
+            context.Items[MagicStrings.HttpContextGuid] = acc.Value.Id;
+            context.Items[MagicStrings.HttpContextRole] = acc.Value.Role;
+            context.Items[MagicStrings.HttpContextAcc] = account;
+            context.Items[MagicStrings.HttpContextKey] = key;
+        } else {
+            return "Account does not exist.";
+        }
+
+        return null;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Account information could not be found. Searched for account: {account}")]
