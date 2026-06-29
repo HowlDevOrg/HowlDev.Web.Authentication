@@ -38,11 +38,15 @@ public class TryAccountInfo {
         IsValid = false;
     }
 
-    private TryAccountInfo(string accountName, string apiKey, Guid guid, int role) {
-        AccountName = accountName;
-        ApiKey = apiKey;
-        Guid = guid;
-        Role = role;
+    /// <summary>
+    /// Only used for internal use. Do not use. Inject it with parameters
+    /// in your endpoints. 
+    /// </summary>
+    public TryAccountInfo(HttpContext context) {
+        AccountName = (string)context.Items[MagicStrings.HttpContextAcc]!;
+        ApiKey = (string)context.Items[MagicStrings.HttpContextKey]!;
+        Guid = (Guid)context.Items[MagicStrings.HttpContextGuid]!;
+        Role = (int)context.Items[MagicStrings.HttpContextRole]!;
         IsValid = true;
     }
 
@@ -54,11 +58,6 @@ public class TryAccountInfo {
             return ValueTask.FromResult(new TryAccountInfo());
         }
 
-        string accountName = (string)context.Items[MagicStrings.HttpContextAcc]!;
-        string apiKey = (string)context.Items[MagicStrings.HttpContextKey]!;
-        Guid guid = (Guid)context.Items[MagicStrings.HttpContextGuid]!;
-        int role = (int)context.Items[MagicStrings.HttpContextRole]!;
-
-        return ValueTask.FromResult(new TryAccountInfo(accountName!, apiKey!, guid, role));
+        return ValueTask.FromResult(new TryAccountInfo(context));
     }
 }

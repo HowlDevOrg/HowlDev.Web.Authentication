@@ -66,8 +66,7 @@ public partial class IdentityMiddleware {
         } else {
             // Validate user here
             AuthMetrics.ValidatedRequests.Add(1);
-            string? account = context.Request.Headers[Config.HeaderAccount];
-            string? key = context.Request.Headers[Config.HeaderKey];
+            (string? account, string? key) = MiddlewareValidation.GetContextHeaders(context);
             if (string.IsNullOrEmpty(account) || string.IsNullOrEmpty(key)) {
                 context.Response.StatusCode = 401;
                 if (Config.DisableHeaderInfo) {

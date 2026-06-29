@@ -45,7 +45,7 @@ app.MapGet("/user/signin", async (TryAccountInfo info) => {
     }
 
     return Results.Ok("Account not validated.");
-});
+}).TrySetAccountInformation(0);
 
 app.MapPost("/user/signin", async (AuthService service, SignIn obj) => {
     if (await service.IsValidUserPassAsync(obj.user, obj.pass)) {

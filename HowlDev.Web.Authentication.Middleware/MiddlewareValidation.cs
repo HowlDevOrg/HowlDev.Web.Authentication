@@ -12,6 +12,15 @@ public partial class MiddlewareValidation(ILogger<MiddlewareValidation> _logger,
     private readonly ILogger<MiddlewareValidation> logger = _logger;
 
     /// <summary>
+    /// Returns the headers according to the Config values.
+    /// </summary>
+    public static (string?, string?) GetContextHeaders(HttpContext context) {
+        string? account = context.Request.Headers[IdentityMiddleware.Config.HeaderAccount];
+        string? key = context.Request.Headers[IdentityMiddleware.Config.HeaderKey];
+        return (account, key);
+    }
+
+    /// <summary>
     /// Runs through my validation checks to ensure the account is valid, the key is valid, and 
     /// the key isn't expired (if configured). <br/>
     /// Returns True if the middleware/filter should continue calling up the chain or should 
