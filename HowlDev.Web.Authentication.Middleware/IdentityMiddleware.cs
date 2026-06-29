@@ -85,9 +85,7 @@ public partial class IdentityMiddleware {
             }
 
             DateTime? output = await service.GetValidatedOnForKeyAsync(account, key);
-            if (output is not null) {
-                LogDateResult(output);
-            } else {
+            if (output is null) {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("API key does not exist.");
                 AuthMetrics.UnknownApiKeys.Add(1);
@@ -104,7 +102,6 @@ public partial class IdentityMiddleware {
 
             TimeSpan timeBetween = DateTime.Now.ToUniversalTime() - (DateTime)output;
             if (timeBetween < Config.ExpirationDate) {
-                LogTimeRemaining(timeBetween);
                 if (Config.ReValidationDate is not null &&
                     timeBetween > Config.ReValidationDate) {
                     await service.ReValidateAsync(account, key);
@@ -142,12 +139,6 @@ public partial class IdentityMiddleware {
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Account information could not be found. Searched for account: {account}")]
     private partial void LogAccountName(string account);
-
-    [LoggerMessage(Level = LogLevel.Trace, Message = "Found a date value ({output})")]
-    private partial void LogDateResult(DateTime? output);
-
-    [LoggerMessage(Level = LogLevel.Trace, Message = "Found date was not past the calculated expiration date. There is still ({timespan}) time left.")]
-    private partial void LogTimeRemaining(TimeSpan? timespan);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Could not find API key ({key}) in the table.")]
     private partial void LogUnknownKey(string key);
