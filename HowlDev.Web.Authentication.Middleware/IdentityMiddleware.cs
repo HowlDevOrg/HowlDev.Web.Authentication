@@ -24,13 +24,13 @@ public partial class IdentityMiddleware {
     /// The current configuration object for path bypass, headers, and 
     /// validation timeouts.
     /// </summary>
-    public static IDMiddlewareConfig config { get; private set; } = new();
+    public static IDMiddlewareConfig Config { get; private set; } = new();
 
     /// <summary/>
     public IdentityMiddleware(RequestDelegate _next, IAuthMiddlewareService _service, IDMiddlewareConfig _config, ILogger<IdentityMiddleware> _logger) {
         next = _next;
         service = _service;
-        config = _config;
+        Config = _config;
         logger = _logger;
     }
 
@@ -40,8 +40,8 @@ public partial class IdentityMiddleware {
         string path = context.Request.Path.ToString();
 
         bool startsWith = false;
-        if (config.Whitelist is not null) {
-            startsWith = !path.StartsWith(config.Whitelist);
+        if (Config.Whitelist is not null) {
+            startsWith = !path.StartsWith(Config.Whitelist);
         }
 
 
@@ -49,25 +49,25 @@ public partial class IdentityMiddleware {
             logger.LogDebug("Whitelist skipped authentication.");
             AuthMetrics.WhitelistPaths.Add(1);
             await next(context);
-        } else if (config.Paths.Any(c => c.Contains(path))) {
+        } else if (Config.Paths.Any(c => c.Contains(path))) {
             logger.LogDebug("Paths excluded current request.");
             AuthMetrics.PathExclusions.Add(1);
             await next(context);
-        } else if (config.RegexPaths.Any(c => c.IsMatch(path))) {
+        } else if (Config.RegexPaths.Any(c => c.IsMatch(path))) {
             logger.LogDebug("Regex excluded current request.");
             AuthMetrics.RegexExclusions.Add(1);
             await next(context);
         } else {
             // Validate user here
             AuthMetrics.ValidatedRequests.Add(1);
-            string? account = context.Request.Headers[config.HeaderAccount];
-            string? key = context.Request.Headers[config.HeaderKey];
+            string? account = context.Request.Headers[Config.HeaderAccount];
+            string? key = context.Request.Headers[Config.HeaderKey];
             if (string.IsNullOrEmpty(account) || string.IsNullOrEmpty(key)) {
                 context.Response.StatusCode = 401;
-                if (config.DisableHeaderInfo) {
+                if (Config.DisableHeaderInfo) {
                     await context.Response.WriteAsync("Unauthorized: Missing header(s).");
                 } else {
-                    await context.Response.WriteAsync($"Unauthorized: Missing header(s).\nRequires an \"{config.HeaderAccount}\" and \"{config.HeaderKey}\" header.");
+                    await context.Response.WriteAsync($"Unauthorized: Missing header(s).\nRequires an \"{Config.HeaderAccount}\" and \"{Config.HeaderKey}\" header.");
                 }
 
                 AuthMetrics.IncorrectHeaders.Add(1);
@@ -77,10 +77,10 @@ public partial class IdentityMiddleware {
 
             Result<Account> acc = await service.TryGetUserAsync(account);
             if (acc.IsValid) {
-                context.Items["Guid"] = acc.Value.Id;
-                context.Items["Role"] = acc.Value.Role;
-                context.Items["Account"] = account;
-                context.Items["Key"] = key;
+                context.Items[MagicStrings.HttpContextGuid] = acc.Value.Id;
+                context.Items[MagicStrings.HttpContextRole] = acc.Value.Role;
+                context.Items[MagicStrings.HttpContextAcc] = account;
+                context.Items[MagicStrings.HttpContextKey] = key;
             } else {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Account does not exist.");
@@ -101,7 +101,7 @@ public partial class IdentityMiddleware {
                 return;
             }
 
-            if (config.ExpirationDate is null) {
+            if (Config.ExpirationDate is null) {
                 logger.LogDebug("Expiration date is null. Not performing any validation checks on the date.");
                 await next(context);
                 return;
@@ -109,10 +109,10 @@ public partial class IdentityMiddleware {
 
 
             TimeSpan timeBetween = DateTime.Now.ToUniversalTime() - (DateTime)output;
-            if (timeBetween < config.ExpirationDate) {
+            if (timeBetween < Config.ExpirationDate) {
                 LogTimeRemaining(timeBetween);
-                if (config.ReValidationDate is not null &&
-                    timeBetween > config.ReValidationDate) {
+                if (Config.ReValidationDate is not null &&
+                    timeBetween > Config.ReValidationDate) {
                     await service.ReValidateAsync(account, key);
                     AuthMetrics.ResetKeys.Add(1);
                     logger.LogInformation("Key was revalidated.");
@@ -121,7 +121,7 @@ public partial class IdentityMiddleware {
                 await next(context);
             } else {
                 // Explicit cast removes the null check that's completed above
-                await service.ExpiredKeySignOutAsync((TimeSpan)config.ExpirationDate);
+                await service.ExpiredKeySignOutAsync((TimeSpan)Config.ExpirationDate);
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Time has run out. Please sign in again.");
                 logger.LogInformation("Key was expired and removed.");

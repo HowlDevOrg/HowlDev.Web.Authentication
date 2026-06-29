@@ -40,10 +40,10 @@ public class AccountInfo {
             throw new InvalidOperationException("AccountInfo must be applied to endpoints where the middleware checks.");
         }
 
-        string accountName = (string)context.Items["Account"]!;
-        string apiKey = (string)context.Items["Key"]!;
-        Guid guid = (Guid)context.Items["Guid"]!;
-        int role = (int)context.Items["Role"]!;
+        string accountName = (string)context.Items[MagicStrings.HttpContextAcc]!;
+        string apiKey = (string)context.Items[MagicStrings.HttpContextKey]!;
+        Guid guid = (Guid)context.Items[MagicStrings.HttpContextGuid]!;
+        int role = (int)context.Items[MagicStrings.HttpContextRole]!;
 
         return ValueTask.FromResult(new AccountInfo(accountName!, apiKey!, guid, role));
     }
