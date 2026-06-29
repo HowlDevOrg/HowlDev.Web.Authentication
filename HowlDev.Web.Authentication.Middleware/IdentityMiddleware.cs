@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.ComponentModel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace HowlDev.Web.Authentication.Middleware;
@@ -18,20 +19,26 @@ namespace HowlDev.Web.Authentication.Middleware;
 /// </summary>
 public partial class IdentityMiddleware {
     private readonly RequestDelegate next;
-    private readonly IAuthMiddlewareService service;
     private readonly ILogger<IdentityMiddleware> logger;
     /// <summary>
     /// The current configuration object for path bypass, headers, and 
     /// validation timeouts.
     /// </summary>
     public static IDMiddlewareConfig Config { get; private set; } = new();
+    /// <summary>
+    /// Internal validator class for validating HttpContext values and 
+    /// authentication. <br/>
+    /// Only designed for internal use. 
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static MiddlewareValidation? Validator { get; private set; }
 
     /// <summary/>
-    public IdentityMiddleware(RequestDelegate _next, IAuthMiddlewareService _service, IDMiddlewareConfig _config, ILogger<IdentityMiddleware> _logger) {
+    public IdentityMiddleware(RequestDelegate _next, MiddlewareValidation _validator, IDMiddlewareConfig _config, ILogger<IdentityMiddleware> _logger) {
         next = _next;
-        service = _service;
-        Config = _config;
         logger = _logger;
+        Config = _config;
+        Validator = _validator;
     }
 
     /// <summary/>
@@ -43,7 +50,6 @@ public partial class IdentityMiddleware {
         if (Config.Whitelist is not null) {
             startsWith = !path.StartsWith(Config.Whitelist);
         }
-
 
         if (startsWith) {
             logger.LogDebug("Whitelist skipped authentication.");
@@ -75,71 +81,12 @@ public partial class IdentityMiddleware {
                 return;
             }
 
-            string? errorMessage = await TryFillingAccountInfo(context, account, key);
-            if (errorMessage is not null) {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsync(errorMessage);
-                AuthMetrics.UnknownAccounts.Add(1);
-                LogAccountName(account);
-                return;
-            }
-
-            DateTime? output = await service.GetValidatedOnForKeyAsync(account, key);
-            if (output is null) {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsync("API key does not exist.");
-                AuthMetrics.UnknownApiKeys.Add(1);
-                LogUnknownKey(key);
-                return;
-            }
-
-            if (Config.ExpirationDate is null) {
-                logger.LogDebug("Expiration date is null. Not performing any validation checks on the date.");
+            bool runNextInContext = await Validator!.RunMiddlewareValidationChecks(context, account, key);
+            if (runNextInContext) {
                 await next(context);
-                return;
-            }
-
-
-            TimeSpan timeBetween = DateTime.Now.ToUniversalTime() - (DateTime)output;
-            if (timeBetween < Config.ExpirationDate) {
-                if (Config.ReValidationDate is not null &&
-                    timeBetween > Config.ReValidationDate) {
-                    await service.ReValidateAsync(account, key);
-                    AuthMetrics.ResetKeys.Add(1);
-                    logger.LogInformation("Key was revalidated.");
-                }
-
-                await next(context);
-            } else {
-                // Explicit cast removes the null check that's completed above
-                await service.ExpiredKeySignOutAsync((TimeSpan)Config.ExpirationDate);
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsync("Time has run out. Please sign in again.");
-                logger.LogInformation("Key was expired and removed.");
-                AuthMetrics.ExpiredKeys.Add(1);
             }
         }
 
         logger.LogTrace("Exiting middleware method.");
     }
-
-    private async Task<string?> TryFillingAccountInfo(HttpContext context, string account, string key) {
-        Result<Account> acc = await service.TryGetUserAsync(account);
-        if (acc.IsValid) {
-            context.Items[MagicStrings.HttpContextGuid] = acc.Value.Id;
-            context.Items[MagicStrings.HttpContextRole] = acc.Value.Role;
-            context.Items[MagicStrings.HttpContextAcc] = account;
-            context.Items[MagicStrings.HttpContextKey] = key;
-        } else {
-            return "Account does not exist.";
-        }
-
-        return null;
-    }
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Account information could not be found. Searched for account: {account}")]
-    private partial void LogAccountName(string account);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Could not find API key ({key}) in the table.")]
-    private partial void LogUnknownKey(string key);
 }

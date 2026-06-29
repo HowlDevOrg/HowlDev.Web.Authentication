@@ -15,6 +15,7 @@ public static class IdentityMiddlewareExtension {
     /// </summary>
     public static WebApplicationBuilder AddAuthService(this WebApplicationBuilder builder) {
         builder.Services.AddSingleton<AuthService>();
+        builder.Services.AddSingleton<MiddlewareValidation>();
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IAuthMiddlewareService, AuthService>();
         return builder;
