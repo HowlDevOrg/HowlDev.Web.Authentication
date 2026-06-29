@@ -5,10 +5,6 @@ using TestingAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//var connString = builder.Configuration["DOTNET_DATABASE_STRING"] ?? throw new InvalidOperationException("Connection string for database not found.");
-//var connString = "Host=localhost;Database=accountAuth;Username=cody;Password=123456abc;";
-//Console.WriteLine("Connection String: " + connString);
-//builder.Services.AddSingleton<DbConnector>();
 builder.AddAuthService();
 builder.Services.AddLogging();
 
