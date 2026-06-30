@@ -93,6 +93,15 @@ For items in long-term storage:
 
 ## Changelog
 
+4.0.0 & 2.0.0 (??/??/??)
+
+- BREAKING CHANGE: UseAccountIdentityMiddleware now takes in a new first parameter so I have a path for growth without major version changes. The default is Headers, which is the same system being used for the last year. 
+- Optimized some IAuthMiddleware database calls to not throw errors and instead return defaults through Dapper (which I think save around 1.5 microseconds by not having to throw and catch). 
+  - This includes a new wrapper type, Result&lt;T&gt;, which just says the inner thing may be null if the outer IsValid flag is not true. Simple to use and check.  
+- Included a pair of functions; the `TryAccountInfo` which is sort of a code overload for a Result type, and the new endpoint filter `TrySetAccountInformation` which looks for a key and validates it (providing you with the standard AccountInfo information), or fails and just falls through. 
+  - In one of my projects, I wanted to have one endpoint I could call with or without authentication, and it would either show me a public version or something specific to my user. 
+  - This only applies to endpoints that are bypassed by one of the parameters passed to the Middleware. There are various mechanisms to help you configure this correctly (by which I mean it will throw errors when you use it incorrectly). These are all using Debug flags though so it should be just as fast in production.
+
 3.1.0 (3/17/26)
 
 - Added two new methods to the AuthService: 

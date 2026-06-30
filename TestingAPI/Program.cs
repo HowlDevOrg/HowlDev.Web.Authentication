@@ -13,7 +13,7 @@ var app = builder.Build();
 AuthService.UpdateArgonOptions(new Argon2Options(4, 256, 2));
 // Console.WriteLine(AuthService.BenchmarkArgonOptions());
 
-app.UseAccountIdentityMiddleware(options => {
+app.UseAccountIdentityMiddleware(MiddlewareLocation.Headers, options => {
     options.Paths = ["/users", "/user", "/user/signin", "/health"];
     // options.RegexPaths = [new Regex("ws/[1-9]+")];
     // options.HeaderAccount = "Lorem-Account"; // This works as expected
@@ -46,6 +46,15 @@ app.MapGet("/user/signin", async (TryAccountInfo info) => {
 
     return Results.Ok("Account not validated.");
 }).TrySetAccountInformation(0);
+
+// Duplicate to make sure it works with multiple parameters. 
+// app.MapGet("/user/signin", async (HttpContext context, TryAccountInfo info) => {
+//     if (info.IsValid) {
+//         return Results.Ok($"Guid: {info.Guid}, Name: {info.AccountName}");
+//     }
+
+//     return Results.Ok("Account not validated.");
+// }).TrySetAccountInformation();
 
 app.MapPost("/user/signin", async (AuthService service, SignIn obj) => {
     if (await service.IsValidUserPassAsync(obj.user, obj.pass)) {
