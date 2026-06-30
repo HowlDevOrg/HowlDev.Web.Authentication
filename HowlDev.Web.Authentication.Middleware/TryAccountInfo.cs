@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 
@@ -54,9 +55,8 @@ public class TryAccountInfo {
     /// Is this even visible? I don't think so. 
     /// </summary>
     public static ValueTask<TryAccountInfo> BindAsync(HttpContext context) {
-        if (context.Items.ContainsKey(MagicStrings.HttpContextAcc)) {
-            throw new Exception("This path is already covered by the Auth middleware. Use AccountInfo instead.");
-        }
+        Debug.Assert(!context.Items.ContainsKey(MagicStrings.HttpContextAcc),
+            "This path is already covered by the Auth middleware. Use AccountInfo instead.");
 
         return ValueTask.FromResult(new TryAccountInfo());
     }
