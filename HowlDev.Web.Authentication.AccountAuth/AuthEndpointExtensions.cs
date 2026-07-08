@@ -1,9 +1,11 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using HowlDev.Web.Authentication.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace HowlDev.Web.Authentication.AccountAuth;
 
@@ -24,13 +26,18 @@ public static class AuthEndpointExtensions {
         this RouteHandlerBuilder builder) {
         return builder.AddEndpointFilter(async (context, next) => {
             (string? account, string? key) = MiddlewareValidation.GetContextHeaders(context.HttpContext);
-            if (account is not null && key is not null) {
+            ILogger<TrySetAccountInfoLogger> logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TrySetAccountInfoLogger>>();
+            if (!string.IsNullOrWhiteSpace(account) && !string.IsNullOrWhiteSpace(key)) {
                 MiddlewareValidation validator = context.HttpContext.RequestServices.GetRequiredService<MiddlewareValidation>();
+
+                logger.LogTrace("Running validation checks inside TrySetAccountInfo.");
                 bool isValidKey = await validator.RunMiddlewareValidationChecks(context.HttpContext, account, key);
                 if (!isValidKey) {
+                    logger.LogTrace("Failed to validate key.");
                     // Here, it should implicitly come back with the information set in the validator. 
                     return null;
                 } else {
+                    logger.LogTrace("Key was validated.");
                     // This segment was written by AI.
                     var endpoint = context.HttpContext.GetEndpoint();
                     var methodInfo = endpoint?.Metadata.GetMetadata<MethodInfo>();
@@ -52,6 +59,7 @@ public static class AuthEndpointExtensions {
                     return await next(context);
                 }
             } else {
+                logger.LogTrace("Account or key was invalid, bypassing TrySetAccountInfo.");
                 return await next(context);
             }
         });
@@ -71,19 +79,24 @@ public static class AuthEndpointExtensions {
         this RouteHandlerBuilder builder, int index) {
         return builder.AddEndpointFilter(async (context, next) => {
             (string? account, string? key) = MiddlewareValidation.GetContextHeaders(context.HttpContext);
-            if (account is not null && key is not null) {
+            ILogger<TrySetAccountInfoLogger> logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TrySetAccountInfoLogger>>();
+            if (!string.IsNullOrWhiteSpace(account) && !string.IsNullOrWhiteSpace(key)) {
                 MiddlewareValidation validator = context.HttpContext.RequestServices.GetRequiredService<MiddlewareValidation>();
+                logger.LogTrace("Running validation checks inside TrySetAccountInfo.");
                 bool isValidKey = await validator.RunMiddlewareValidationChecks(context.HttpContext, account, key);
                 if (!isValidKey) {
+                    logger.LogTrace("Failed to validate key.");
                     // Here, it should implicitly come back with the information set in the validator. 
                     return null;
                 } else {
+                    logger.LogTrace("Key was validated.");
                     ValidateIndexWithinBounds(index, context);
 
                     context.Arguments[index] = new TryAccountInfo(context.HttpContext);
                     return await next(context);
                 }
             } else {
+                logger.LogTrace("Account or key was invalid, bypassing TrySetAccountInfo.");
                 return await next(context);
             }
         });
@@ -102,3 +115,9 @@ public static class AuthEndpointExtensions {
         }
     }
 }
+
+/// <summary>
+/// Class generated for prettier text in Trace logs.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public class TrySetAccountInfoLogger { }

@@ -18,6 +18,7 @@ public static class IdentityMiddlewareExtension {
         builder.Services.AddSingleton<MiddlewareValidation>();
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IAuthMiddlewareService, AuthService>();
+        builder.Services.AddSingleton<TrySetAccountInfoLogger>();
         return builder;
     }
 }
