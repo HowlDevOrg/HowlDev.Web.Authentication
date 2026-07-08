@@ -89,8 +89,14 @@ A few more features are coming before I consider the library done. (This is a so
   - Instead of adjusting cache directly, should just invalidate it
   - This would include a rewrite of the singleton registration to match the `UseAccountIdentityMiddleware` function
   - (with long-term-planning 1 below): set a TimeSpan which will clear the cache asynchronously
+- Mhmm.. instead of having `TryAccountInfo` and the method that you need to call to validate it, I could just combine the logic into that class and have it do everything it needs to do before reaching out... Version 4.1 thing.
 
 ## Changelog
+
+4.0.1 & 2.0.1 (7/7/26)
+
+- Added more Trace logs for debugging inside TrySetAccountInformation
+- Changed internal logic in that method from `__ is not null` to `string.IsNullOrWhiteSpace(___)`.
 
 4.0.0 & 2.0.0 (6/30/26)
 
