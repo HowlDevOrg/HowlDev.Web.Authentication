@@ -35,7 +35,7 @@ public static class AuthEndpointExtensions {
                 if (!isValidKey) {
                     logger.LogTrace("Failed to validate key.");
                     // Here, it should implicitly come back with the information set in the validator. 
-                    return null;
+                    return Results.Empty;
                 } else {
                     logger.LogTrace("Key was validated.");
                     // This segment was written by AI.
@@ -87,7 +87,7 @@ public static class AuthEndpointExtensions {
                 if (!isValidKey) {
                     logger.LogTrace("Failed to validate key.");
                     // Here, it should implicitly come back with the information set in the validator. 
-                    return null;
+                    return Results.Empty;
                 } else {
                     logger.LogTrace("Key was validated.");
                     ValidateIndexWithinBounds(index, context);

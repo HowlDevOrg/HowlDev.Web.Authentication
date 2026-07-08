@@ -30,6 +30,7 @@ public partial class MiddlewareValidation(ILogger<MiddlewareValidation> _logger,
     public async Task<bool> RunMiddlewareValidationChecks(HttpContext context, string account, string key) {
         string? errorMessage = await TryFillingAccountInfo(context, account, key);
         if (errorMessage is not null) {
+            logger.LogTrace("Unable to fill account info.");
             context.Response.StatusCode = 401;
             await context.Response.WriteAsync(errorMessage);
             AuthMetrics.UnknownAccounts.Add(1);
@@ -39,6 +40,7 @@ public partial class MiddlewareValidation(ILogger<MiddlewareValidation> _logger,
 
         DateTime? output = await service.GetValidatedOnForKeyAsync(account, key);
         if (output is null) {
+            logger.LogTrace("API key does not exist.");
             context.Response.StatusCode = 401;
             await context.Response.WriteAsync("API key does not exist.");
             AuthMetrics.UnknownApiKeys.Add(1);
