@@ -93,10 +93,13 @@ A few more features are coming before I consider the library done. (This is a so
 
 ## Changelog
 
-4.0.1 & 2.0.1 (7/7/26)
+4.0.1-2 & 2.0.1-2 (7/7/26)
 
 - Added more Trace logs for debugging inside TrySetAccountInformation
 - Changed internal logic in that method from `__ is not null` to `string.IsNullOrWhiteSpace(___)`.
+- 0.2
+  - Fixed bug with setting context multiple times (which would throw crashing errors)
+  - and some more logs
 
 4.0.0 & 2.0.0 (6/30/26)
 
